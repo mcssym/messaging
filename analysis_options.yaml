@@ -1,0 +1,22 @@
+include: package:lint/analysis_options.yaml
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options
+
+analyzer: 
+  exclude:
+    - example/**/*.dart
+  errors: 
+    public_member_api_docs: error
+    missing_return: error
+    dead_code: error
+  language: 
+    strict-casts: true
+    strict-raw-types: true
+    strict-inference: true
+
+linter:
+  rules: 
+    public_member_api_docs: true
+    always_use_package_imports: false
+    prefer_relative_imports: true

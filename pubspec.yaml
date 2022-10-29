@@ -1,0 +1,19 @@
+name: messaging
+description: Messaging service to connect your components and services through publisher/subscriber pattern.
+version: 1.0.0
+# homepage: https://www.example.com
+
+environment:
+  sdk: '>=2.17.0 <3.0.0'
+
+dependencies: 
+  collection: ^1.17.0
+  logger: ^1.1.0
+  meta: ^1.8.0
+  uuid: ^3.0.6
+
+dev_dependencies:
+  build_runner: ^2.2.0
+  lint: ^1.9.0
+  mockito: ^5.3.0
+  test: ^1.16.0
