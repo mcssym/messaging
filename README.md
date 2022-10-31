@@ -81,7 +81,7 @@ class UserCreateMessage extends Message {
 A message can be published multiple times and has a priority. Higher is the priority, more quickly it will be dispatched to subscribers. 
 
 #### Message state
-A message has a state where informations about it is saved in the store. The state of a message is accessible through its `MessageState` class with states:
+A message has a state where informations about it are saved in the store. The state of a message is accessible through its `MessageState` class with states:
 - `published` the message has been published aka it has passed the guards and has been added to the queue.
 - `dispatching` the message is currently dispatching and the subscriber key that already received the message is saved in the `MessageState`
 - `dispatched` the message has been dispatched to all current subscribers.
@@ -124,14 +124,14 @@ Prefer to add all subscribers before starting the messaging so that pending mess
 You can publish a message from anywhere in your code where you have access to the `Messaging` instance. A message can be published:
 - in queue
 ```dart
-final User user = User;
+final User user = User(name: 'John Doe');
 final UserCreateMessage message = UserCreateMessage(user);
 final PublishResult result = messaging.publish(message);
 ```
 - immediately
 
 ```dart
-final User user = User;
+final User user = User(name: 'John Doe');
 final UserCreateMessage message = UserCreateMessage(user);
 final PublishResult result = await messaging.publishNow(message);
 ```
@@ -144,10 +144,10 @@ final PublishResult result = await messaging.publishNow(message);
 
 #### Differences between `in queue` and `immediately`
 - `in queue` is synchronous and `immediately` is asynchronous.
-- `in queue` added the message in queue and `immediately` directly dispatches the message to observers so don't add in the queue.
+- `in queue` added the message in queue and `immediately` directly dispatches the message to subscribers so doesn't add it in the queue.
 
 #### Result of publication
-The methods `publish` and `publishNow` returns a `PublishResult` that allows to know if the publication succeed or not. If the publication was not allowed by the guards, the result will be a `GuardPublishResult` and if it failed for another reason, it will be a `FailedPublishResult`.
+The methods `publish` and `publishNow` returns a `PublishResult` that allows to know if the publication succeed or not. If the publication was not allowed by the guards, the result will be a `GuardPublishResult` and if it failed for another reason (for example a subscriber throws an error and you pass `strategy` of `publishNow` to `PublishNowErrorHandlingStrategy.breakDispatch`), it will be a `FailedPublishResult`.
 
 ### Observation
 It is possible to observe many changes in the package through an observer that will be inform for specific operations that occurred. It is possible to create an observer like
@@ -155,55 +155,55 @@ It is possible to observe many changes in the package through an observer that w
 class MyObserver extends MessagingObserver {
   @override
   void onPrePublish(Message message) {
-    // TODO: implement onPrePublish
+    // Informed before message is published
     super.onPrePublish(message);
   }
 
   @override
   void onDispatchFailed(Message message, Object error, {MessagingSubscriber? subscriber, StackTrace? trace}) {
-    // TODO: implement onDispatchFailed
+    // Informed when an error occurred during dispatching (to an subscriber or not) 
     super.onDispatchFailed(message, error, subscriber, trace);
   }
 
   @override
   void onMessagingStateChanged(MessagingState state) {
-    // TODO: implement onMessagingStateChanged
+    // Informed when the state of the messaging instance changed
     super.onMessagingStateChanged(state);
   }
 
   @override
   void onNotAllowed(Message message, MessagingGuard guard, MessagingGuardResponse response) {
-    // TODO: implement onNotAllowed
+    // Informed when a message is not allowed by a guard
     super.onNotAllowed(message, guard, response);
   }
 
   @override
   void onPostDispatch(Message message) {
-    // TODO: implement onPostDispatch
+    // Informed after the message is dispatched
     super.onPostDispatch(message);
   }
 
   @override
   void onPostPublish(Message message) {
-    // TODO: implement onPostPublish
+    // Informed after the message is published
     super.onPostPublish(message);
   }
 
   @override
   void onPreDispatch(Message message) {
-    // TODO: implement onPreDispatch
+    // Informed before the message is dispatched
     super.onPreDispatch(message);
   }
 
   @override
   void onPublishFailed(Message message, Object error, {StackTrace? trace}) {
-    // TODO: implement onPublishFailed
+    // Informed when publication of a message failed for any other reason but the guard
     super.onPublishFailed(message, error, trace);
   }
 
   @override
   void onSaved(Message message) {
-    // TODO: implement onSaved
+    // Informed when the message is saved in the store
     super.onSaved(message);
   }
 }
@@ -266,8 +266,10 @@ The logger is only used to log operation made. The default implementation use `l
 There's many others functionalities that'll come in the next version so i am open to contributions or simply discussion about the current implementation.
 
 ### TODOs
-- Idempotent messages
-- Poison messages
-- Repeated messages
-- Message expiration
-- Message scheduling
+- Add group/channel of message and allow to subscribe to it
+- Integrate
+    - Idempotent messages
+    - Poison messages
+    - Repeated messages
+    - Message expiration
+    - Message scheduling
