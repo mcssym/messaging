@@ -7,10 +7,10 @@ import 'package:test/test.dart';
 
 @GenerateNiceMocks(
   [
-    MockSpec<MessagingCacheStore>(),
+    MockSpec<MessagingStore>(),
     MockSpec<ILogger>(),
-    MockSpec<MessageQueueDispatcher>(),
-    MockSpec<MessageQueue>(),
+    MockSpec<MessagingQueueDispatcher>(),
+    MockSpec<MessagingQueue>(),
     MockSpec<MessagingGuard>(),
     MockSpec<MessagingObserver>(),
     MockSpec<MessagingSubscriber>(
@@ -47,17 +47,17 @@ class RandomMessage extends Message {
 void main() {
   group('Publish', () {
     late Messaging messaging;
-    late MockMessageQueue messageQueue;
+    late MockMessagingQueue messagingQueue;
     late MockILogger logger;
-    late MockMessagingCacheStore store;
+    late MockMessagingStore store;
     setUp(() {
-      messageQueue = MockMessageQueue();
+      messagingQueue = MockMessagingQueue();
       logger = MockILogger();
-      store = MockMessagingCacheStore();
+      store = MockMessagingStore();
       messaging = Messaging(
         guards: [],
         logger: logger,
-        messageQueueFactory: (_) => messageQueue,
+        messagingQueueFactory: (_) => messagingQueue,
         store: store,
         observers: [],
       );
@@ -127,7 +127,7 @@ void main() {
         final messaging = Messaging(
           guards: [],
           logger: logger,
-          messageQueueFactory: (_) => SyncMessageQueue(dispatcher: _),
+          messagingQueueFactory: (_) => SyncMessagingQueue(dispatcher: _),
           store: MessagingMemoryStore(),
           observers: [],
         );
@@ -159,7 +159,7 @@ void main() {
         final messaging = Messaging(
           guards: [],
           logger: logger,
-          messageQueueFactory: (_) => SyncMessageQueue(dispatcher: _),
+          messagingQueueFactory: (_) => SyncMessagingQueue(dispatcher: _),
           store: MessagingMemoryStore(),
           observers: [],
         );
@@ -188,7 +188,7 @@ void main() {
         final messaging = Messaging(
           guards: [],
           logger: logger,
-          messageQueueFactory: (_) => SyncMessageQueue(
+          messagingQueueFactory: (_) => SyncMessagingQueue(
             dispatcher: _,
           ),
           store: MessagingMemoryStore(),
@@ -235,7 +235,7 @@ void main() {
       messaging = Messaging(
         guards: [],
         logger: logger,
-        messageQueueFactory: (_) => SyncMessageQueue(dispatcher: _),
+        messagingQueueFactory: (_) => SyncMessagingQueue(dispatcher: _),
         store: MessagingMemoryStore(),
         observers: [],
       );
@@ -377,7 +377,7 @@ void main() {
       messaging = Messaging(
         guards: [],
         logger: logger,
-        messageQueueFactory: (_) => SyncMessageQueue(dispatcher: _),
+        messagingQueueFactory: (_) => SyncMessagingQueue(dispatcher: _),
         store: MessagingMemoryStore(),
         observers: [],
       );

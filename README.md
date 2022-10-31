@@ -40,10 +40,10 @@ final Messaging messaging = Messaging();
 
 // Complex/Flexible
 final ILogger myLogger = MyLogger();
-final MessagingCacheStore store = MyStore();
+final MessagingStore store = MyStore();
 final Iterable<MessagingGuard> guards = <MessagingGuard>[];
 final  Iterable<MessagingObserver> observers = <MessagingObserver>[];
-final MessageQueueFactory messageQueueFactory = (dispatcher) => MyMessageQueue(dispatcher: dispatcher, resumeStrategy:
+final MessagingQueueFactory messagingQueueFactory = (dispatcher) => MyMessagingQueue(dispatcher: dispatcher, resumeStrategy:
         ResumeQueueStrategy.dispatchPendingMessages);
 
 final Messaging messaging = Messaging(
@@ -51,7 +51,7 @@ final Messaging messaging = Messaging(
     store: store,
     guards: guards,
     observers: observers,
-    messageQueueFactory: messageQueueFactory,
+    messagingQueueFactory: messagingQueueFactory,
 );
 ```
 It allows us to **publish**, **subscribe** to message, has its own lifecycle and must be started before any message are dispatched.
@@ -67,7 +67,7 @@ messaging.stop();
 ```
 > Only the queue is reset, guards, observers are not changed or cleared.
 - `paused` means the messaging has been paused so every published message won't be dispatched and will remain in the queue.
-- `resumed` means the messaging has been resumed after a pause or start. All pending messages in the queue will be dispatch following the `resumeStrategy` of `MessageQueue`.
+- `resumed` means the messaging has been resumed after a pause or start. All pending messages in the queue will be dispatch following the `resumeStrategy` of `MessagingQueue`.
 ### Message
 A message is an immutable data structure that you send/publish. It should be an object with its class extending `Message` base class.
 
@@ -238,6 +238,15 @@ class OnceMessageGuard implements MessagingGuard, MessagingObserver {
 
   @override
   void onPublishFailed(Message message, Object error, {StackTrace? trace}) {
+    _checkAndRemove(message);
+  }
+
+  @override
+  void onNotAllowed(Message message, Object error, {StackTrace? trace}) {
+    _checkAndRemove(message);
+  }
+
+  void _checkAndRemove(Message message) {
     if (messageTypePublishableOnce.contains(message.runtimeType)) {
       _messageTypeAlreadyPublishedOnce.remove(message.runtimeType);
     }
@@ -250,14 +259,14 @@ Then you can add your observer in two ways:
 - Adding to the observers property like `messaging.guards.add(OnceMessageGuard())`.
 ### Customization
 #### Queue
-All published messages are added to queue that is a `MessageQueue` using their generated unique key and this one is responsable to dispatch a message to subscribers through the messaging api. The implementation (so the behavior) of the queue can be different on your needs. You can create your own implementation by extending/implementing the `MessageQueue` class and give your implementation through the `messageQueueFactory` parameter of `Messaging` or use the existing ones:
-- `TimerMessageQueue` that uses an internal `Timer` to dispatch message at interval of time.
-- `SyncMessageQueue` that dispatches messages directly when they are published to the queue.
+All published messages are added to queue which is a `MessagingQueue` using their generated unique key and this one is responsable to dispatch a message to subscribers through the messaging api. The implementation (so the behavior) of the queue can be different on your needs. You can create your own implementation by extending/implementing the `MessagingQueue` class and give your implementation through the `MessagingQueueFactory` parameter of `Messaging` or use the existing ones:
+- `TimerMessagingQueue` that uses an internal `Timer` to dispatch message at interval of time.
+- `SyncMessagingQueue` that dispatches messages directly when they are published to the queue.
 
-> __IMPORTANT__: If you extend `MessageQueue` to dispatch a message you just have to call `dispatchQueuedItem()` method. The method `onItemAddedToQueue` is called every time a new item/message is added/published to the queue. 
+> __IMPORTANT__: If you extend `MessagingQueue` to dispatch a message you just have to call `dispatchQueuedItem()` method. The method `onItemAddedToQueue` is called every time a new item/message is added/published to the queue. 
 
 #### Store
-Before being published and after being allowed by the guards, the message is saved in the store. This store is also used to get message by their generated key before dispatching it. You can implement your own store by extending/implementing `MessagingCacheStore` or you can use the implemented `MessagingMemoryStore` that saved messages in memory.
+Before being published and after being allowed by the guards, the message is saved in the store. This store is also used to get message by their generated key before dispatching it. You can implement your own store by extending/implementing `MessagingStore` or you can use the implemented `MessagingMemoryStore` that saved messages in memory.
 
 #### Logger
 The logger is only used to log operation made. The default implementation use `logger` package internally and can be configured through the `logConfig` parameter or you can use your own implementation.

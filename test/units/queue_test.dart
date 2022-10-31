@@ -1,20 +1,20 @@
 import 'dart:async';
 
-import 'package:messaging/src/queues/message_queue.dart';
-import 'package:messaging/src/queues/sync_message_queue.dart';
-import 'package:messaging/src/queues/timer_message_queue.dart';
+import 'package:messaging/src/queues/messaging_queue.dart';
+import 'package:messaging/src/queues/sync_messaging_queue.dart';
+import 'package:messaging/src/queues/timer_messaging_queue.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 @GenerateMocks(
   [
-    MessageQueueDispatcher,
+    MessagingQueueDispatcher,
   ],
 )
 import 'queue_test.mocks.dart';
 
-class CallbackDispatcher implements MessageQueueDispatcher {
+class CallbackDispatcher implements MessagingQueueDispatcher {
   final void Function(String key) onDispatch;
 
   CallbackDispatcher({required this.onDispatch});
@@ -25,20 +25,20 @@ class CallbackDispatcher implements MessageQueueDispatcher {
 }
 
 void main() {
-  group('MessageQueue', () {
+  group('MessagingQueue', () {
     test(
       'dispatches all pending items during resume',
       () async {
-        final dispatcher = MockMessageQueueDispatcher();
-        final messageQueue = SyncMessageQueue(
+        final dispatcher = MockMessagingQueueDispatcher();
+        final messagingQueue = SyncMessagingQueue(
           dispatcher: dispatcher,
         );
         for (var i = 0; i < 4; i++) {
-          messageQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
+          messagingQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
         }
 
         when(dispatcher.dispatch(any)).thenAnswer((_) {});
-        messageQueue.resume();
+        messagingQueue.resume();
 
         verify(dispatcher.dispatch(any)).called(4);
       },
@@ -46,46 +46,46 @@ void main() {
     test(
       'removes all pending items during resume',
       () async {
-        final dispatcher = MockMessageQueueDispatcher();
-        final messageQueue = SyncMessageQueue(
+        final dispatcher = MockMessagingQueueDispatcher();
+        final messagingQueue = SyncMessagingQueue(
           resumeStrategy: ResumeQueueStrategy.removePendingMessages,
           dispatcher: dispatcher,
         );
         for (var i = 0; i < 4; i++) {
-          messageQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
+          messagingQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
         }
 
         when(dispatcher.dispatch(any)).thenAnswer((_) {});
-        final lengthBeforeResume = messageQueue.length;
-        messageQueue.resume();
+        final lengthBeforeResume = messagingQueue.length;
+        messagingQueue.resume();
 
         expect(lengthBeforeResume, equals(4));
-        expect(messageQueue.length, equals(0));
+        expect(messagingQueue.length, equals(0));
         verifyNever(dispatcher.dispatch(any));
       },
     );
     test(
       'removes all pending items during all resume except the first one',
       () async {
-        final dispatcher = MockMessageQueueDispatcher();
-        final messageQueue = SyncMessageQueue(
+        final dispatcher = MockMessagingQueueDispatcher();
+        final messagingQueue = SyncMessagingQueue(
           resumeStrategy:
               ResumeQueueStrategy.removePendingMessagesButFirstResume,
           dispatcher: dispatcher,
         );
         for (var i = 0; i < 4; i++) {
-          messageQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
+          messagingQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
         }
 
         when(dispatcher.dispatch(any)).thenAnswer((_) {});
-        final lengthBeforeResume = messageQueue.length;
-        messageQueue.resume();
-        final lengthAfterFirstResume = messageQueue.length;
-        messageQueue.resume();
+        final lengthBeforeResume = messagingQueue.length;
+        messagingQueue.resume();
+        final lengthAfterFirstResume = messagingQueue.length;
+        messagingQueue.resume();
 
         expect(lengthBeforeResume, equals(4));
         expect(lengthAfterFirstResume, equals(4));
-        expect(messageQueue.length, equals(0));
+        expect(messagingQueue.length, equals(0));
         verifyNever(dispatcher.dispatch(any));
       },
     );
@@ -102,41 +102,44 @@ void main() {
             }
           },
         );
-        final messageQueue = SyncMessageQueue(
+        final messagingQueue = SyncMessagingQueue(
           dispatcher: dispatcher,
         );
-        messageQueue.addQueueItem(const QueueItem(item: 'item_0', priority: 0));
-        messageQueue.addQueueItem(const QueueItem(item: 'item_3', priority: 3));
-        messageQueue
+        messagingQueue
+            .addQueueItem(const QueueItem(item: 'item_0', priority: 0));
+        messagingQueue
+            .addQueueItem(const QueueItem(item: 'item_3', priority: 3));
+        messagingQueue
             .addQueueItem(const QueueItem(item: 'item_2', priority: 10));
-        messageQueue.addQueueItem(const QueueItem(item: 'item_1', priority: 1));
+        messagingQueue
+            .addQueueItem(const QueueItem(item: 'item_1', priority: 1));
 
-        messageQueue.resume();
+        messagingQueue.resume();
         await completer.future;
 
         expect(firstDispatchedKey, equals('item_2'));
       },
     );
   });
-  group('SyncMessageQueue', () {
-    late SyncMessageQueue messageQueue;
+  group('SyncMessagingQueue', () {
+    late SyncMessagingQueue messagingQueue;
     setUp(() {
-      messageQueue = SyncMessageQueue(
-        dispatcher: MockMessageQueueDispatcher(),
+      messagingQueue = SyncMessagingQueue(
+        dispatcher: MockMessagingQueueDispatcher(),
       );
     });
 
     test(
       'has length equals to 1 when paused and one message is added',
       () async {
-        messageQueue.pause();
-        messageQueue.addQueueItem(
+        messagingQueue.pause();
+        messagingQueue.addQueueItem(
           const QueueItem(
             item: 'item',
             priority: 1,
           ),
         );
-        expect(messageQueue.length, equals(1));
+        expect(messagingQueue.length, equals(1));
       },
       timeout: const Timeout(
         Duration(
@@ -148,15 +151,15 @@ void main() {
     test(
       'has length equals to 0 when not paused and one message is added',
       () async {
-        messageQueue.resume();
-        messageQueue.addQueueItem(
+        messagingQueue.resume();
+        messagingQueue.addQueueItem(
           const QueueItem(
             item: 'item',
             priority: 1,
           ),
         );
 
-        expect(messageQueue.length, equals(0));
+        expect(messagingQueue.length, equals(0));
       },
       timeout: const Timeout(
         Duration(
@@ -169,16 +172,16 @@ void main() {
       'dispatches the added message key',
       () async {
         String? dispatchedKey;
-        final SyncMessageQueue messageQueue = SyncMessageQueue(
+        final SyncMessagingQueue messagingQueue = SyncMessagingQueue(
           dispatcher: CallbackDispatcher(
             onDispatch: (key) {
               dispatchedKey = key;
             },
           ),
         );
-        messageQueue.resume();
+        messagingQueue.resume();
         const String addedKey = 'key_dispatched';
-        messageQueue.addQueueItem(
+        messagingQueue.addQueueItem(
           const QueueItem(
             item: addedKey,
             priority: 1,
@@ -198,17 +201,17 @@ void main() {
       'will dispatch all added message keys in paused state when resumed',
       () async {
         int dispatchedKeyCount = 0;
-        final SyncMessageQueue messageQueue = SyncMessageQueue(
+        final SyncMessagingQueue messagingQueue = SyncMessagingQueue(
           dispatcher: CallbackDispatcher(
             onDispatch: (key) {
               dispatchedKeyCount++;
             },
           ),
         );
-        messageQueue.pause();
+        messagingQueue.pause();
         const int maxToAdd = 4;
         for (int i = 0; i < maxToAdd; i++) {
-          messageQueue.addQueueItem(
+          messagingQueue.addQueueItem(
             QueueItem(
               item: 'item_$i',
               priority: 1,
@@ -217,7 +220,7 @@ void main() {
         }
         expect(dispatchedKeyCount, equals(0));
 
-        messageQueue.resume();
+        messagingQueue.resume();
 
         expect(dispatchedKeyCount, equals(maxToAdd));
       },
@@ -229,23 +232,23 @@ void main() {
     );
   });
 
-  group('TimerMessageQueue', () {
-    late TimerMessageQueue timerMessageQueue;
+  group('TimerMessagingQueue', () {
+    late TimerMessagingQueue messagingQueue;
     setUp(() {
-      timerMessageQueue =
-          TimerMessageQueue(dispatcher: MockMessageQueueDispatcher());
+      messagingQueue =
+          TimerMessagingQueue(dispatcher: MockMessagingQueueDispatcher());
     });
 
     test(
       'has length equals to 1 when not resumed and one message is added',
       () async {
-        timerMessageQueue.addQueueItem(
+        messagingQueue.addQueueItem(
           const QueueItem(
             item: 'item',
             priority: 1,
           ),
         );
-        expect(timerMessageQueue.length, equals(1));
+        expect(messagingQueue.length, equals(1));
       },
       timeout: const Timeout(
         Duration(
@@ -257,8 +260,8 @@ void main() {
     test(
       'has length equals to 0 when resumed and one message is added',
       () async {
-        timerMessageQueue.resume();
-        timerMessageQueue.addQueueItem(
+        messagingQueue.resume();
+        messagingQueue.addQueueItem(
           const QueueItem(
             item: 'item',
             priority: 1,
@@ -267,7 +270,7 @@ void main() {
 
         await Future<void>.delayed(const Duration(seconds: 1));
 
-        expect(timerMessageQueue.length, equals(0));
+        expect(messagingQueue.length, equals(0));
       },
       timeout: const Timeout(
         Duration(
@@ -277,7 +280,7 @@ void main() {
     );
 
     tearDown(() {
-      timerMessageQueue.reset();
+      messagingQueue.reset();
     });
   });
 }

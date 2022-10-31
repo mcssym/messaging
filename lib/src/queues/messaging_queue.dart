@@ -1,13 +1,13 @@
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
-/// A factory that allows to create a [MessageQueue]
-typedef MessageQueueFactory = MessageQueue Function(
-  MessageQueueDispatcher dispatcher,
+/// A factory that allows to create a [MessagingQueue]
+typedef MessagingQueueFactory = MessagingQueue Function(
+  MessagingQueueDispatcher dispatcher,
 );
 
 /// Interface to access public API of the queue of messaging
-abstract class MessagingQueue {
+abstract class MessageQueue {
   /// length of the queue
   int get length;
 
@@ -19,10 +19,10 @@ abstract class MessagingQueue {
 }
 
 /// A queue that store all message keys
-abstract class MessageQueue implements MessagingQueue {
+abstract class MessagingQueue implements MessageQueue {
   /// Callback that will be called every time a message by its key
   /// should be dispatched to subscribers
-  final MessageQueueDispatcher dispatcher;
+  final MessagingQueueDispatcher dispatcher;
 
   /// Queue of items
   final PriorityQueue<QueueItem<String>> _queue;
@@ -35,7 +35,7 @@ abstract class MessageQueue implements MessagingQueue {
   bool _alreadyResumeOnce = false;
 
   /// Constructor
-  MessageQueue({
+  MessagingQueue({
     required this.resumeStrategy,
     required this.dispatcher,
     required bool isPaused,
@@ -140,7 +140,7 @@ abstract class MessageQueue implements MessagingQueue {
 }
 
 /// Dispatcher that will dispatch message key
-abstract class MessageQueueDispatcher {
+abstract class MessagingQueueDispatcher {
   /// Dispatch [item] of a [QueueItem]
   void dispatch(String item);
 }

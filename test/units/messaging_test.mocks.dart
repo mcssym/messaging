@@ -12,7 +12,7 @@ import 'package:messaging/src/common/messaging_state.dart' as _i12;
 import 'package:messaging/src/guards/messaging_guard.dart' as _i3;
 import 'package:messaging/src/messaging.dart' as _i9;
 import 'package:messaging/src/observers/messaging_observer.dart' as _i10;
-import 'package:messaging/src/queues/message_queue.dart' as _i2;
+import 'package:messaging/src/queues/messaging_queue.dart' as _i2;
 import 'package:messaging/src/stores/messaging_store.dart' as _i4;
 import 'package:messaging/src/subscribers/messaging_subscriber.dart' as _i11;
 import 'package:mockito/mockito.dart' as _i1;
@@ -30,9 +30,9 @@ import 'messaging_test.dart' as _i13;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-class _FakeMessageQueueDispatcher_0 extends _i1.SmartFake
-    implements _i2.MessageQueueDispatcher {
-  _FakeMessageQueueDispatcher_0(
+class _FakeMessagingQueueDispatcher_0 extends _i1.SmartFake
+    implements _i2.MessagingQueueDispatcher {
+  _FakeMessagingQueueDispatcher_0(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -52,11 +52,10 @@ class _FakeMessagingGuardResponse_1 extends _i1.SmartFake
         );
 }
 
-/// A class which mocks [MessagingCacheStore].
+/// A class which mocks [MessagingStore].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMessagingCacheStore extends _i1.Mock
-    implements _i4.MessagingCacheStore {
+class MockMessagingStore extends _i1.Mock implements _i4.MessagingStore {
   @override
   _i5.Future<String> insert(_i6.MessageState? messageState) =>
       (super.noSuchMethod(
@@ -223,11 +222,11 @@ class MockILogger extends _i1.Mock implements _i8.ILogger {
       );
 }
 
-/// A class which mocks [MessageQueueDispatcher].
+/// A class which mocks [MessagingQueueDispatcher].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMessageQueueDispatcher extends _i1.Mock
-    implements _i2.MessageQueueDispatcher {
+class MockMessagingQueueDispatcher extends _i1.Mock
+    implements _i2.MessagingQueueDispatcher {
   @override
   void dispatch(String? item) => super.noSuchMethod(
         Invocation.method(
@@ -238,22 +237,22 @@ class MockMessageQueueDispatcher extends _i1.Mock
       );
 }
 
-/// A class which mocks [MessageQueue].
+/// A class which mocks [MessagingQueue].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMessageQueue extends _i1.Mock implements _i2.MessageQueue {
+class MockMessagingQueue extends _i1.Mock implements _i2.MessagingQueue {
   @override
-  _i2.MessageQueueDispatcher get dispatcher => (super.noSuchMethod(
+  _i2.MessagingQueueDispatcher get dispatcher => (super.noSuchMethod(
         Invocation.getter(#dispatcher),
-        returnValue: _FakeMessageQueueDispatcher_0(
+        returnValue: _FakeMessagingQueueDispatcher_0(
           this,
           Invocation.getter(#dispatcher),
         ),
-        returnValueForMissingStub: _FakeMessageQueueDispatcher_0(
+        returnValueForMissingStub: _FakeMessagingQueueDispatcher_0(
           this,
           Invocation.getter(#dispatcher),
         ),
-      ) as _i2.MessageQueueDispatcher);
+      ) as _i2.MessagingQueueDispatcher);
   @override
   _i2.ResumeQueueStrategy get resumeStrategy => (super.noSuchMethod(
         Invocation.getter(#resumeStrategy),

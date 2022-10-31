@@ -3,7 +3,7 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:messaging/src/queues/message_queue.dart' as _i2;
+import 'package:messaging/src/queues/messaging_queue.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -17,12 +17,12 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-/// A class which mocks [MessageQueueDispatcher].
+/// A class which mocks [MessagingQueueDispatcher].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMessageQueueDispatcher extends _i1.Mock
-    implements _i2.MessageQueueDispatcher {
-  MockMessageQueueDispatcher() {
+class MockMessagingQueueDispatcher extends _i1.Mock
+    implements _i2.MessagingQueueDispatcher {
+  MockMessagingQueueDispatcher() {
     _i1.throwOnMissingStub(this);
   }
 

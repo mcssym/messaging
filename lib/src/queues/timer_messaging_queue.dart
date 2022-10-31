@@ -1,19 +1,19 @@
 import 'dart:async';
 
-import 'message_queue.dart';
+import 'messaging_queue.dart';
 
 /// A message queue that dispatch a new key every [timing].
 ///
 /// It is paused by default so won't dispatch any item until you resume it.
-class TimerMessageQueue extends MessageQueue {
+class TimerMessagingQueue extends MessagingQueue {
   /// Duration between each timer loop
   final Duration timing;
 
   Timer? _timer;
 
   /// Constructor
-  TimerMessageQueue({
-    required MessageQueueDispatcher dispatcher,
+  TimerMessagingQueue({
+    required MessagingQueueDispatcher dispatcher,
     bool isPaused = true,
     ResumeQueueStrategy resumeStrategy = ResumeQueueStrategy.nothing,
     this.timing = const Duration(milliseconds: 500),

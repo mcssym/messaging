@@ -1,10 +1,10 @@
-import 'message_queue.dart';
+import 'messaging_queue.dart';
 
 /// A message queue that dispatch a new key directly when it is added
-class SyncMessageQueue extends MessageQueue {
+class SyncMessagingQueue extends MessagingQueue {
   /// Constructor
-  SyncMessageQueue({
-    required MessageQueueDispatcher dispatcher,
+  SyncMessagingQueue({
+    required MessagingQueueDispatcher dispatcher,
     bool isPaused = true,
     ResumeQueueStrategy resumeStrategy =
         ResumeQueueStrategy.dispatchPendingMessages,

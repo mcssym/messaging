@@ -2,7 +2,7 @@ import '../common/message.dart';
 import '../common/message_state.dart';
 
 /// An interface to access public APIs of the store of messages
-abstract class MessagingStore {
+abstract class MessageStore {
   /// Count all saved messages
   Future<int> count();
 
@@ -14,7 +14,7 @@ abstract class MessagingStore {
 }
 
 /// A store to save the messages temporarily or forever
-abstract class MessagingCacheStore extends MessagingStore {
+abstract class MessagingStore extends MessageStore {
   /// Insert [messageState] in the store
   ///
   /// It should return the key to use to retrieve [messageState]

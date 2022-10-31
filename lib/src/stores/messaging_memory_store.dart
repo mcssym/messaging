@@ -3,8 +3,8 @@ import '../common/message.dart';
 import '../common/message_state.dart';
 import 'messaging_store.dart';
 
-/// Implementation of [MessagingCacheStore] that saved messages in memory
-class MessagingMemoryStore extends MessagingCacheStore {
+/// Implementation of [MessagingStore] that saved messages in memory
+class MessagingMemoryStore extends MessagingStore {
   final Map<String, MessageState> _tempStore = <String, MessageState>{};
 
   /// Key resolver used to resolve key for MessageState inserted

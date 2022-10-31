@@ -7,8 +7,8 @@ import 'common/message_state.dart';
 import 'common/messaging_state.dart';
 import 'guards/messaging_guard.dart';
 import 'observers/messaging_observer.dart';
-import 'queues/message_queue.dart';
-import 'queues/timer_message_queue.dart';
+import 'queues/messaging_queue.dart';
+import 'queues/timer_messaging_queue.dart';
 import 'stores/messaging_memory_store.dart';
 import 'stores/messaging_store.dart';
 import 'subscribers/messaging_subscriber.dart';
@@ -99,15 +99,15 @@ abstract class Messaging {
   factory Messaging({
     ILogger? logger,
     LogConfig? logConfig,
-    MessageQueueFactory? messageQueueFactory,
+    MessagingQueueFactory? messagingQueueFactory,
     Iterable<MessagingGuard>? guards,
     Iterable<MessagingObserver>? observers,
-    MessagingCacheStore? store,
+    MessagingStore? store,
   }) {
     return Messaging.create(
       logConfig: logConfig,
       logger: logger,
-      messageQueueFactory: messageQueueFactory,
+      messagingQueueFactory: messagingQueueFactory,
       store: store,
       guards: IterableWrapper<MessagingGuard>(guards ?? defaultGuards),
       observers:
@@ -115,8 +115,8 @@ abstract class Messaging {
     );
   }
 
-  /// Constructor with [messageQueueFactory] a factory method to use to create
-  /// the [MessageQueue]. If none assigned then a [TimerMessageQueue] will be used
+  /// Constructor with [MessagingQueueFactory] a factory method to use to create
+  /// the [MessagingQueue]. If none assigned then a [TimerMessagingQueue] will be used
   ///
   /// The [guards] is the list of guards to use. When null, the [defaultGuards] will
   /// be used. Be sure to include the [defaultGuards] in your guards when you assign it if you
@@ -131,17 +131,17 @@ abstract class Messaging {
   factory Messaging.create({
     ILogger? logger,
     LogConfig? logConfig,
-    MessageQueueFactory? messageQueueFactory,
+    MessagingQueueFactory? messagingQueueFactory,
     required IterableWrapper<MessagingGuard> guards,
     required IterableWrapper<MessagingObserver> observers,
-    MessagingCacheStore? store,
+    MessagingStore? store,
   }) {
     return _Messaging(
       logConfig: logConfig,
       logger: logger,
       guards: guards,
       observers: observers,
-      messageQueueFactory: messageQueueFactory,
+      messagingQueueFactory: messagingQueueFactory,
       store: store,
     );
   }
@@ -156,13 +156,13 @@ abstract class Messaging {
   IterableWrapper<MessagingObserver> get observers;
 
   /// Queue
-  MessagingQueue get queue;
+  MessageQueue get queue;
 
   /// Check the messaging is stopped
   bool get stopped;
 
   /// Get current store
-  MessagingStore get store;
+  MessageStore get store;
 
   /// Pause the messaging
   ///
@@ -267,10 +267,10 @@ enum _InformType {
   saved,
 }
 
-class _Messaging implements Messaging, MessageQueueDispatcher {
+class _Messaging implements Messaging, MessagingQueueDispatcher {
   final ILogger _log;
-  final MessagingCacheStore _store;
-  late final MessageQueue _messageQueue;
+  final MessagingStore _store;
+  late final MessagingQueue _messagingQueue;
   final IterableWrapper<MessagingGuard> _guards;
   final IterableWrapper<MessagingObserver> _observers;
   final Map<Type, Set<MessagingSubscriber>> _subscribers;
@@ -280,10 +280,10 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
   _Messaging({
     ILogger? logger,
     LogConfig? logConfig,
-    MessageQueueFactory? messageQueueFactory,
+    MessagingQueueFactory? messagingQueueFactory,
     required IterableWrapper<MessagingGuard> guards,
     required IterableWrapper<MessagingObserver> observers,
-    MessagingCacheStore? store,
+    MessagingStore? store,
   })  : _subscribers = <Type, Set<MessagingSubscriber>>{},
         _guards = guards,
         _store = store ?? MessagingMemoryStore(),
@@ -293,9 +293,9 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
               level: logConfig?.logLevel ?? LogLevel.verbose,
             ),
         _observers = observers {
-    _messageQueue = messageQueueFactory != null
-        ? messageQueueFactory(this)
-        : TimerMessageQueue(
+    _messagingQueue = messagingQueueFactory != null
+        ? messagingQueueFactory(this)
+        : TimerMessagingQueue(
             dispatcher: this,
           );
   }
@@ -310,7 +310,7 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
   IterableWrapper<MessagingObserver> get observers => _observers;
 
   @override
-  MessagingQueue get queue => _messageQueue;
+  MessagingQueue get queue => _messagingQueue;
 
   @override
   bool get stopped => _stopped;
@@ -325,7 +325,7 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
 
   @override
   void pause() {
-    _messageQueue.pause();
+    _messagingQueue.pause();
     _log.info('Paused');
     _informObserversOfStateChanged(MessagingState.paused);
   }
@@ -394,7 +394,7 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
 
   @override
   void resume() {
-    _messageQueue.resume();
+    _messagingQueue.resume();
     _log.info('Resumed');
     _informObserversOfStateChanged(MessagingState.resumed);
   }
@@ -406,7 +406,7 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
     final states = await _store.getStates();
     states.forEach((key, state) {
       if (state.type != MessageStateType.dispatched) {
-        _addKeyToMessageQueue(key, state.message.priority);
+        _addKeyToMessagingQueue(key, state.message.priority);
       }
     });
     resume();
@@ -419,7 +419,7 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
   void stop() {
     if (_stopped) return;
 
-    _messageQueue.reset();
+    _messagingQueue.reset();
 
     _log.info('Stopped');
     _informObserversOfStateChanged(MessagingState.stopped);
@@ -476,8 +476,8 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
     _log.info('unsubscribe $subscriber to all');
   }
 
-  void _addKeyToMessageQueue(String key, int priority) {
-    _messageQueue.addQueueItem(
+  void _addKeyToMessagingQueue(String key, int priority) {
+    _messagingQueue.addQueueItem(
       QueueItem<String>(
         item: key,
         priority: priority,
@@ -674,7 +674,7 @@ class _Messaging implements Messaging, MessageQueueDispatcher {
       final key = await _saveToStore(
         message,
       );
-      _addKeyToMessageQueue(key, message.priority);
+      _addKeyToMessagingQueue(key, message.priority);
       _informObserversOf(_InformType.postPublish, message);
     } catch (e, s) {
       _informObserversOfPublishFailed(message, e, s);
