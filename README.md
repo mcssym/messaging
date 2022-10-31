@@ -1,7 +1,32 @@
 # Messaging
+<p align="center">              
+<a href="https://img.shields.io/badge/License-MIT-green"><img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License"></a>              
+<a href="https://github.com/mcssym/messaging/stargazers"><img src="https://img.shields.io/github/stars/mcssym/messaging?style=flat&logo=github&colorB=green&label=stars" alt="stars"></a>              
+<a href="https://pub.dev/packages/messaging"><img src="https://img.shields.io/pub/v/messaging.svg?label=pub&color=orange" alt="pub version"></a>              
+<a href="https://discord.gg/zN6FB8wMR6">              
+ <img src="https://img.shields.io/discord/1036665678779920474.svg?color=7289da&label=Discord&logo=discord&style=flat-square" alt="Discord Badge"></a>              
+</p>  
 A dart, flexible and powerful package to connect your components and services in a loosely coupled manner.
 
 Allows you to maximize scalability and responsiveness using mainly the publisher/subscriber pattern.
+
+- [Installation](#installation)
+- [Features](#features)
+- [Usage](#ssage)
+    - [Messaging instantiation](#messaging-instantiation)
+    - [Message implementation](#message-implementation)
+    - [Message subscription](#message-subscription)
+    - [Message publication](#message-publication)
+    - [Observe](#observe)
+    - [Guard](#guard)
+    - [Customization](#customization)
+        - [Queue customization](#queue-customization)
+        - [Store customization](#store-customization)
+        - [Logger customization](#logger-customization)
+- [Additional information](#additional-information)
+- [TODOs](#todos)
+
+---
 
 ## Installation
 
@@ -14,6 +39,7 @@ dart pub add messaging
 ```
 flutter pub add messaging
 ```
+
 
 ## Features
 Messaging has many features from the basics:
@@ -29,7 +55,7 @@ To more specifics:
 - __Flexibility__: allowing you to customize the interfaces used the package to adapt to your business logic.
 
 ## Usage
-### Messaging
+### Messaging instantiation
 
 The instantiation could be simple or more complex.
 ``` dart
@@ -68,7 +94,7 @@ messaging.stop();
 > Only the queue is reset, guards, observers are not changed or cleared.
 - `paused` means the messaging has been paused so every published message won't be dispatched and will remain in the queue.
 - `resumed` means the messaging has been resumed after a pause or start. All pending messages in the queue will be dispatch following the `resumeStrategy` of `MessagingQueue`.
-### Message
+### Message implementation
 A message is an immutable data structure that you send/publish. It should be an object with its class extending `Message` base class.
 
 ```dart
@@ -86,7 +112,7 @@ A message has a state where informations about it are saved in the store. The st
 - `dispatching` the message is currently dispatching and the subscriber key that already received the message is saved in the `MessageState`
 - `dispatched` the message has been dispatched to all current subscribers.
 
-### Subscription
+### Message subscription
 To subscribe to a message you must have a subscriber or a class that implemented `MessagingSubscriber`. This class can be service, a component, a widget etc. A subscriber can
 - be implemented like
 ```dart
@@ -120,7 +146,7 @@ messaging.unsubscribeAll(subscriber); // It will unsubscribe to all subscribed m
 > __IMPORTANT__: A each subscriber should return a unique subscriber key through the getter `subscriberKey`. 
 Prefer to add all subscribers before starting the messaging so that pending messages in the store could be dispatched to them.
 
-### Publication
+### Message publication
 You can publish a message from anywhere in your code where you have access to the `Messaging` instance. A message can be published:
 - in queue
 ```dart
@@ -149,7 +175,7 @@ final PublishResult result = await messaging.publishNow(message);
 #### Result of publication
 The methods `publish` and `publishNow` returns a `PublishResult` that allows to know if the publication succeed or not. If the publication was not allowed by the guards, the result will be a `GuardPublishResult` and if it failed for another reason (for example a subscriber throws an error and you pass `strategy` of `publishNow` to `PublishNowErrorHandlingStrategy.breakDispatch`), it will be a `FailedPublishResult`.
 
-### Observation
+### Observe
 It is possible to observe many changes in the package through an observer that will be inform for specific operations that occurred. It is possible to create an observer like
 ```dart
 class MyObserver extends MessagingObserver {
@@ -258,17 +284,17 @@ Then you can add your observer in two ways:
 - In instantiation of your `Messaging`.
 - Adding to the observers property like `messaging.guards.add(OnceMessageGuard())`.
 ### Customization
-#### Queue
+#### Queue customization
 All published messages are added to queue which is a `MessagingQueue` using their generated unique key and this one is responsable to dispatch a message to subscribers through the messaging api. The implementation (so the behavior) of the queue can be different on your needs. You can create your own implementation by extending/implementing the `MessagingQueue` class and give your implementation through the `MessagingQueueFactory` parameter of `Messaging` or use the existing ones:
 - `TimerMessagingQueue` that uses an internal `Timer` to dispatch message at interval of time.
 - `SyncMessagingQueue` that dispatches messages directly when they are published to the queue.
 
 > __IMPORTANT__: If you extend `MessagingQueue` to dispatch a message you just have to call `dispatchQueuedItem()` method. The method `onItemAddedToQueue` is called every time a new item/message is added/published to the queue. 
 
-#### Store
+#### Store customization
 Before being published and after being allowed by the guards, the message is saved in the store. This store is also used to get message by their generated key before dispatching it. You can implement your own store by extending/implementing `MessagingStore` or you can use the implemented `MessagingMemoryStore` that saved messages in memory.
 
-#### Logger
+#### Logger customization
 The logger is only used to log operation made. The default implementation use `logger` package internally and can be configured through the `logConfig` parameter or you can use your own implementation.
 ## Additional information
 
