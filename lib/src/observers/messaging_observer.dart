@@ -37,7 +37,7 @@ abstract class MessagingObserver {
     StackTrace? trace,
   }) {}
 
-  /// It is called when [error] occurs when [message] is publishing
+  /// It is called when [error] occurs while publishing of [message]
   void onPublishFailed(
     Message message,
     Object error, {

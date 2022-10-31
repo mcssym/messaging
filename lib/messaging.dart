@@ -4,10 +4,10 @@
 /// Publisher/Subscriber pattern of messages.
 library messaging;
 
-export 'src/common/exports.dart';
-export 'src/guards/exports.dart';
+export 'src/common/common.dart';
+export 'src/guards/guards.dart';
 export 'src/messaging.dart';
-export 'src/observers/exports.dart';
-export 'src/queue/exports.dart';
-export 'src/store/exports.dart';
-export 'src/subscribers/exports.dart';
+export 'src/observers/observers.dart';
+export 'src/queues/queues.dart';
+export 'src/stores/stores.dart';
+export 'src/subscribers/subscribers.dart';

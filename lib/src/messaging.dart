@@ -7,10 +7,10 @@ import 'common/message_state.dart';
 import 'common/messaging_state.dart';
 import 'guards/messaging_guard.dart';
 import 'observers/messaging_observer.dart';
-import 'queue/message_queue.dart';
-import 'queue/timer_message_queue.dart';
-import 'store/messaging_memory_store.dart';
-import 'store/messaging_store.dart';
+import 'queues/message_queue.dart';
+import 'queues/timer_message_queue.dart';
+import 'stores/messaging_memory_store.dart';
+import 'stores/messaging_store.dart';
 import 'subscribers/messaging_subscriber.dart';
 
 /// Result of publishing a message that failed
@@ -88,22 +88,12 @@ class LogConfig {
 ///
 /// messaging.publish(RandomMessage('RandomMessage'));
 /// ```
-class Messaging {
+abstract class Messaging {
   /// Default guards of the messaging
   static final defaultGuards = <MessagingGuard>[];
 
   /// Default observers of the messaging
   static final defaultObservers = <MessagingObserver>[];
-
-  final ILogger _log;
-  final MessagingCacheStore _store;
-  late final MessageQueue _messageQueue;
-  final IterableWrapper<MessagingGuard> _guards;
-  final IterableWrapper<MessagingObserver> _observers;
-  final Map<Type, Set<MessagingSubscriber>> _subscribers;
-  late final _QueueDispatcherHandler _queueDispatcherHandler;
-
-  bool _stopped = true;
 
   /// Factory constructor to ease the construction of [Messaging.create] constructor
   factory Messaging({
@@ -138,7 +128,156 @@ class Messaging {
   ///
   /// The [store] is the cache store to save and read [MessageState]. When null,
   /// [MessagingMemoryStore] will be used.
-  Messaging.create({
+  factory Messaging.create({
+    ILogger? logger,
+    LogConfig? logConfig,
+    MessageQueueFactory? messageQueueFactory,
+    required IterableWrapper<MessagingGuard> guards,
+    required IterableWrapper<MessagingObserver> observers,
+    MessagingCacheStore? store,
+  }) {
+    return _Messaging(
+      logConfig: logConfig,
+      logger: logger,
+      guards: guards,
+      observers: observers,
+      messageQueueFactory: messageQueueFactory,
+      store: store,
+    );
+  }
+
+  /// Wrapper of guards that allows you to add or remove some
+  IterableWrapper<MessagingGuard> get guards;
+
+  /// Log
+  ToggableLog get log;
+
+  /// Wrapper of observers that allows you to add or remove some
+  IterableWrapper<MessagingObserver> get observers;
+
+  /// Queue
+  MessagingQueue get queue;
+
+  /// Check the messaging is stopped
+  bool get stopped;
+
+  /// Get current store
+  MessagingStore get store;
+
+  /// Pause the messaging
+  ///
+  /// It will pause the queue so that new message won't be dispatch
+  /// until it is resumed.
+  void pause();
+
+  /// Publish [message]
+  ///
+  /// The `PublishResult.reason` will be the response of guard check.
+  /// If all guards allowed then it will be a [AllowedMessagingGuardResponse]
+  /// otherwise it will be a [NotAllowedMessagingGuardResponse].
+  PublishResult publish(Message message);
+
+  /// Publish [message] now allowing to wait until all subscribers
+  /// received the published message.
+  ///
+  /// The `PublishResult.reason` could be the response of guard check.
+  /// If all guards allowed then it will be a [AllowedMessagingGuardResponse] if
+  /// no errors occurred during dispatch otherwise it will be
+  /// a [NotAllowedMessagingGuardResponse].
+  ///
+  /// If an error is thrown by one subscriber during dispatch
+  /// then it is stopped and the `PublishResult.reason`
+  /// will be the thrown error.
+  Future<PublishResult> publishNow(
+    Message message, {
+    PublishNowErrorHandlingStrategy strategy =
+        PublishNowErrorHandlingStrategy.continueDispatch,
+  });
+
+  /// Resume the messaging
+  ///
+  /// It will resume the dispatch of messages.
+  void resume();
+
+  /// Start the publishing of messages.
+  ///
+  /// If there's events that was not published in the store
+  /// then they will be published directly.
+  ///
+  /// It is recommended to call it when you know that every subscribers are
+  /// subscribing
+  Future<void> start();
+
+  /// Stop the instance and reset the queue
+  void stop();
+
+  /// Subscribe [subscriber] to messages of type [to]
+  void subscribe(
+    MessagingSubscriber subscriber, {
+    required Type to,
+  });
+
+  /// Subscribe [subscriber] to all message in [to]
+  ///
+  /// It will call [subscribe] for each item in [to].
+  void subscribeAll(
+    MessagingSubscriber subscriber, {
+    required Iterable<Type> to,
+  });
+
+  /// Unsubscribe [subscriber] to messages of type [to]
+  void unsubscribe(
+    MessagingSubscriber subscriber, {
+    required Type to,
+  });
+
+  /// Unsubscribe [subscriber] to all messages
+  void unsubscribeAll(MessagingSubscriber subscriber);
+}
+
+/// Strategy to apply when error occurred during publish/dispatch now
+enum PublishNowErrorHandlingStrategy {
+  /// Rethrow the error.
+  ///
+  /// This will stop the dispatch to others subscribers
+  breakDispatch,
+
+  /// Do not rethrow the error.
+  ///
+  /// Continue to dispatch to others subscribers
+  continueDispatch
+}
+
+/// Result of publishing a message
+class PublishResult {
+  /// If the message is published
+  final bool published;
+
+  /// Constructor
+  const PublishResult({
+    required this.published,
+  });
+}
+
+enum _InformType {
+  prePublish,
+  postPublish,
+  preDispatch,
+  postDispatch,
+  saved,
+}
+
+class _Messaging implements Messaging, MessageQueueDispatcher {
+  final ILogger _log;
+  final MessagingCacheStore _store;
+  late final MessageQueue _messageQueue;
+  final IterableWrapper<MessagingGuard> _guards;
+  final IterableWrapper<MessagingObserver> _observers;
+  final Map<Type, Set<MessagingSubscriber>> _subscribers;
+
+  bool _stopped = true;
+
+  _Messaging({
     ILogger? logger,
     LogConfig? logConfig,
     MessageQueueFactory? messageQueueFactory,
@@ -154,48 +293,44 @@ class Messaging {
               level: logConfig?.logLevel ?? LogLevel.verbose,
             ),
         _observers = observers {
-    _queueDispatcherHandler = _QueueDispatcherHandler(_dispatch);
-
     _messageQueue = messageQueueFactory != null
-        ? messageQueueFactory(_queueDispatcherHandler)
+        ? messageQueueFactory(this)
         : TimerMessageQueue(
-            dispatcher: _queueDispatcherHandler,
+            dispatcher: this,
           );
   }
 
-  /// Wrapper of guards that allows you to add or remove some
+  @override
   IterableWrapper<MessagingGuard> get guards => _guards;
 
-  /// Log
+  @override
   ToggableLog get log => _log;
 
-  /// Wrapper of observers that allows you to add or remove some
+  @override
   IterableWrapper<MessagingObserver> get observers => _observers;
 
-  /// Queue
+  @override
   MessagingQueue get queue => _messageQueue;
 
-  /// Check the messaging is stopped
+  @override
   bool get stopped => _stopped;
 
-  /// Get current store
+  @override
   MessagingStore get store => _store;
 
-  /// Pause the messaging
-  ///
-  /// It will pause the queue so that new message won't be dispatch
-  /// until it is resumed.
+  @override
+  void dispatch(String key) {
+    unawaited(_dispatchMessageByKey(key));
+  }
+
+  @override
   void pause() {
     _messageQueue.pause();
     _log.info('Paused');
     _informObserversOfStateChanged(MessagingState.paused);
   }
 
-  /// Publish [message]
-  ///
-  /// The `PublishResult.reason` will be the response of guard check.
-  /// If all guards allowed then it will be a [AllowedMessagingGuardResponse]
-  /// otherwise it will be a [NotAllowedMessagingGuardResponse].
+  @override
   PublishResult publish(Message message) {
     _log.info('Publishing $message');
 
@@ -216,17 +351,7 @@ class Messaging {
     );
   }
 
-  /// Publish [message] now allowing to wait until all subscribers
-  /// received the published message.
-  ///
-  /// The `PublishResult.reason` could be the response of guard check.
-  /// If all guards allowed then it will be a [AllowedMessagingGuardResponse] if
-  /// no errors occurred during dispatch otherwise it will be
-  /// a [NotAllowedMessagingGuardResponse].
-  ///
-  /// If an error is thrown by one subscriber during dispatch
-  /// then it is stopped and the `PublishResult.reason`
-  /// will be the thrown error.
+  @override
   Future<PublishResult> publishNow(
     Message message, {
     PublishNowErrorHandlingStrategy strategy =
@@ -267,22 +392,14 @@ class Messaging {
     );
   }
 
-  /// Resume the messaging
-  ///
-  /// It will resume the dispatch of messages.
+  @override
   void resume() {
     _messageQueue.resume();
     _log.info('Resumed');
     _informObserversOfStateChanged(MessagingState.resumed);
   }
 
-  /// Start the publishing of messages.
-  ///
-  /// If there's events that was not published in the store
-  /// then they will be published directly.
-  ///
-  /// It is recommended to call it when you know that every subscribers are
-  /// subscribing
+  @override
   Future<void> start() async {
     if (!_stopped) return;
 
@@ -298,7 +415,7 @@ class Messaging {
     _log.info('Started');
   }
 
-  /// Stop the messaging and stop all related processes
+  @override
   void stop() {
     if (_stopped) return;
 
@@ -309,7 +426,7 @@ class Messaging {
     _stopped = true;
   }
 
-  /// Subscribe [subscriber] to messages of type [to]
+  @override
   void subscribe(
     MessagingSubscriber subscriber, {
     required Type to,
@@ -327,9 +444,7 @@ class Messaging {
     _log.info('${subscriber.subscriberKey} subscribes to $to');
   }
 
-  /// Subscribe [subscriber] to all message in [to]
-  ///
-  /// It will call [subscribe] for each item in [to].
+  @override
   void subscribeAll(
     MessagingSubscriber subscriber, {
     required Iterable<Type> to,
@@ -339,7 +454,7 @@ class Messaging {
     }
   }
 
-  /// Unsubscribe [subscriber] to messages of type [to]
+  @override
   void unsubscribe(
     MessagingSubscriber subscriber, {
     required Type to,
@@ -351,7 +466,7 @@ class Messaging {
     _log.info('${subscriber.subscriberKey} unsubscribes to $to');
   }
 
-  /// Unsubscribe [subscriber] to all messages
+  @override
   void unsubscribeAll(MessagingSubscriber subscriber) {
     _subscribers.forEach((key, value) {
       if (value.contains(subscriber)) {
@@ -385,10 +500,6 @@ class Messaging {
       }
     }
     return const AllowedMessagingGuardResponse();
-  }
-
-  void _dispatch(String key) {
-    unawaited(_dispatchMessageByKey(key));
   }
 
   Future<void> _dispatchMessageByKey(
@@ -585,47 +696,5 @@ class Messaging {
 
   void _updateStateOfMessage(String key, MessageStateUpdatableData data) {
     _store.update(key, data);
-  }
-}
-
-/// Strategy to apply when error occurred during publish/dispatch now
-enum PublishNowErrorHandlingStrategy {
-  /// Rethrow the error.
-  ///
-  /// This will stop the dispatch to others subscribers
-  breakDispatch,
-
-  /// Do not rethrow the error.
-  ///
-  /// Continue to dispatch to others subscribers
-  continueDispatch
-}
-
-/// Result of publishing a message
-class PublishResult {
-  /// If the message is published
-  final bool published;
-
-  /// Constructor
-  const PublishResult({
-    required this.published,
-  });
-}
-
-enum _InformType {
-  prePublish,
-  postPublish,
-  preDispatch,
-  postDispatch,
-  saved,
-}
-
-class _QueueDispatcherHandler implements MessageQueueDispatcher {
-  final void Function(String key) onDispatch;
-
-  _QueueDispatcherHandler(this.onDispatch);
-  @override
-  void dispatch(String item) {
-    onDispatch(item);
   }
 }

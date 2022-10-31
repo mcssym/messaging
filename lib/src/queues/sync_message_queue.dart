@@ -5,7 +5,7 @@ class SyncMessageQueue extends MessageQueue {
   /// Constructor
   SyncMessageQueue({
     required MessageQueueDispatcher dispatcher,
-    bool isPaused = false,
+    bool isPaused = true,
     ResumeQueueStrategy resumeStrategy =
         ResumeQueueStrategy.dispatchPendingMessages,
   }) : super(

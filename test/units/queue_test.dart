@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:messaging/src/queue/message_queue.dart';
-import 'package:messaging/src/queue/sync_message_queue.dart';
-import 'package:messaging/src/queue/timer_message_queue.dart';
+import 'package:messaging/src/queues/message_queue.dart';
+import 'package:messaging/src/queues/sync_message_queue.dart';
+import 'package:messaging/src/queues/timer_message_queue.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -32,7 +32,6 @@ void main() {
         final dispatcher = MockMessageQueueDispatcher();
         final messageQueue = SyncMessageQueue(
           dispatcher: dispatcher,
-          isPaused: true,
         );
         for (var i = 0; i < 4; i++) {
           messageQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
@@ -51,7 +50,6 @@ void main() {
         final messageQueue = SyncMessageQueue(
           resumeStrategy: ResumeQueueStrategy.removePendingMessages,
           dispatcher: dispatcher,
-          isPaused: true,
         );
         for (var i = 0; i < 4; i++) {
           messageQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
@@ -74,7 +72,6 @@ void main() {
           resumeStrategy:
               ResumeQueueStrategy.removePendingMessagesButFirstResume,
           dispatcher: dispatcher,
-          isPaused: true,
         );
         for (var i = 0; i < 4; i++) {
           messageQueue.addQueueItem(QueueItem(item: 'item_$i', priority: i));
@@ -107,7 +104,6 @@ void main() {
         );
         final messageQueue = SyncMessageQueue(
           dispatcher: dispatcher,
-          isPaused: true,
         );
         messageQueue.addQueueItem(const QueueItem(item: 'item_0', priority: 0));
         messageQueue.addQueueItem(const QueueItem(item: 'item_3', priority: 3));
@@ -125,7 +121,9 @@ void main() {
   group('SyncMessageQueue', () {
     late SyncMessageQueue messageQueue;
     setUp(() {
-      messageQueue = SyncMessageQueue(dispatcher: MockMessageQueueDispatcher());
+      messageQueue = SyncMessageQueue(
+        dispatcher: MockMessageQueueDispatcher(),
+      );
     });
 
     test(
@@ -150,6 +148,7 @@ void main() {
     test(
       'has length equals to 0 when not paused and one message is added',
       () async {
+        messageQueue.resume();
         messageQueue.addQueueItem(
           const QueueItem(
             item: 'item',
@@ -177,6 +176,7 @@ void main() {
             },
           ),
         );
+        messageQueue.resume();
         const String addedKey = 'key_dispatched';
         messageQueue.addQueueItem(
           const QueueItem(

@@ -12,8 +12,8 @@ import 'package:messaging/src/common/messaging_state.dart' as _i12;
 import 'package:messaging/src/guards/messaging_guard.dart' as _i3;
 import 'package:messaging/src/messaging.dart' as _i9;
 import 'package:messaging/src/observers/messaging_observer.dart' as _i10;
-import 'package:messaging/src/queue/message_queue.dart' as _i2;
-import 'package:messaging/src/store/messaging_store.dart' as _i4;
+import 'package:messaging/src/queues/message_queue.dart' as _i2;
+import 'package:messaging/src/stores/messaging_store.dart' as _i4;
 import 'package:messaging/src/subscribers/messaging_subscriber.dart' as _i11;
 import 'package:mockito/mockito.dart' as _i1;
 
