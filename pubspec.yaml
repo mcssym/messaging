@@ -1,6 +1,6 @@
 name: messaging
 description: Messaging service to connect your components and services through publisher/subscriber pattern.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/mcssym/messaging
 
 environment:
