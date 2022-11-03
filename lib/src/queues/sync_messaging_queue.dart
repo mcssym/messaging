@@ -4,15 +4,10 @@ import 'messaging_queue.dart';
 class SyncMessagingQueue extends MessagingQueue {
   /// Constructor
   SyncMessagingQueue({
-    required MessagingQueueDispatcher dispatcher,
-    bool isPaused = true,
-    ResumeQueueStrategy resumeStrategy =
-        ResumeQueueStrategy.dispatchPendingMessages,
-  }) : super(
-          dispatcher: dispatcher,
-          isPaused: isPaused,
-          resumeStrategy: resumeStrategy,
-        );
+    required super.dispatcher,
+    super.isPaused = true,
+    super.resumeStrategy = ResumeQueueStrategy.dispatchPendingMessages,
+  });
 
   @override
   void onItemAddedToQueue() {

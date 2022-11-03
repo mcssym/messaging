@@ -23,10 +23,10 @@ class FailedPublishResult extends PublishResult {
 
   /// Constructor
   const FailedPublishResult({
-    required bool published,
+    required super.published,
     this.error,
     this.trace,
-  }) : super(published: published);
+  });
 }
 
 /// Result of publishing a message after the guard step
@@ -36,9 +36,9 @@ class GuardPublishResult extends PublishResult {
 
   /// Constructor
   const GuardPublishResult({
-    required bool published,
+    required super.published,
     required this.response,
-  }) : super(published: published);
+  });
 }
 
 /// Configuration for log

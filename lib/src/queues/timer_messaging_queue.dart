@@ -13,15 +13,11 @@ class TimerMessagingQueue extends MessagingQueue {
 
   /// Constructor
   TimerMessagingQueue({
-    required MessagingQueueDispatcher dispatcher,
-    bool isPaused = true,
-    ResumeQueueStrategy resumeStrategy = ResumeQueueStrategy.nothing,
+    required super.dispatcher,
+    super.isPaused = true,
+    super.resumeStrategy = ResumeQueueStrategy.nothing,
     this.timing = const Duration(milliseconds: 500),
-  }) : super(
-          dispatcher: dispatcher,
-          isPaused: isPaused,
-          resumeStrategy: resumeStrategy,
-        ) {
+  }) {
     _init();
   }
 
