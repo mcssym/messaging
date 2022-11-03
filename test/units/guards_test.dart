@@ -52,6 +52,7 @@ void main() {
     test('one shot message are not allowed', () {
       OneShotMessagingGuard.setDefaultOneShotMessageTypes(
         <Type>[MockOneShotMessage],
+        force: true,
       );
       final messaging = MockMessaging();
 
@@ -93,12 +94,15 @@ void main() {
     });
 
     test('unique dependant message are not allowed', () {
-      UniqueDependantMessagingGuard.setDefaultUniqueDependantMessageTypes({
-        MockUniqueMessage: <Type>[
-          MockDependencyMessage,
-          MockSecondDependencyMessage
-        ]
-      });
+      UniqueDependantMessagingGuard.setDefaultUniqueDependantMessageTypes(
+        {
+          MockUniqueMessage: <Type>[
+            MockDependencyMessage,
+            MockSecondDependencyMessage
+          ],
+        },
+        force: true,
+      );
       final messaging = MockMessaging();
 
       final responseFirstTry =
