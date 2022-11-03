@@ -43,6 +43,7 @@ class UniqueDependantMessagingGuard extends MessagingGuard {
   }) {
     if (_defaultUniqueDependantMessageTypes == null || force) {
       _defaultUniqueDependantMessageTypes = uniqueDependantMessageTypes;
+      _instance = null;
     }
   }
 

@@ -39,6 +39,7 @@ class OneShotMessagingGuard extends MessagingGuard {
   }) {
     if (_defaultOneShotMessageTypes == null || force) {
       _defaultOneShotMessageTypes = oneShotMessageTypes;
+      _instance = null;
     }
   }
 
