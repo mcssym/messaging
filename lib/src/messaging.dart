@@ -462,18 +462,20 @@ class _Messaging implements Messaging, MessagingQueueDispatcher {
     if (!_subscribers.containsKey(to)) {
       return;
     }
-    _subscribers[to]!.remove(subscriber);
+    _subscribers[to]!.removeWhere(
+      (element) => element.equals(subscriber),
+    );
     _log.info('${subscriber.subscriberKey} unsubscribes to $to');
   }
 
   @override
   void unsubscribeAll(MessagingSubscriber subscriber) {
     _subscribers.forEach((key, value) {
-      if (value.contains(subscriber)) {
+      if (value.any((element) => element.equals(subscriber))) {
         unsubscribe(subscriber, to: key);
       }
     });
-    _log.info('unsubscribe $subscriber to all');
+    _log.info('unsubscribe ${subscriber.subscriberKey} to all');
   }
 
   void _addKeyToMessagingQueue(String key, int priority) {
@@ -532,7 +534,8 @@ class _Messaging implements Messaging, MessagingQueueDispatcher {
                 try {
                   await _dispatchTo(subscriber, message);
                   dispatched.add(subscriber.subscriberKey);
-                  _log.info('$message dispatched to $subscriber');
+                  _log.info(
+                      '$message dispatched to ${subscriber.subscriberKey}');
                   _updateStateOfMessage(
                     key,
                     MessageStateUpdatableData(

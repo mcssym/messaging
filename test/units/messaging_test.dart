@@ -41,7 +41,7 @@ class BlockingGuard extends MessagingGuard {
 }
 
 class RandomMessage extends Message {
-  RandomMessage() : super(priority: 10);
+  const RandomMessage() : super(priority: 10);
 }
 
 void main() {
@@ -388,7 +388,7 @@ void main() {
       () async {
         messaging.start();
         final subscriber = MockMessagingSubscriber();
-        final message1 = RandomMessage();
+        const message1 = RandomMessage();
         final message2 = MockMessage();
         messaging.subscribe(subscriber, to: RandomMessage);
         messaging.subscribe(subscriber, to: MockMessage);
@@ -409,7 +409,7 @@ void main() {
       () async {
         await messaging.start();
         final subscriber = MockMessagingSubscriber();
-        final message1 = RandomMessage(); // priority 10
+        const message1 = RandomMessage(); // priority 10
         final message2 = MockMessage(); // priority 0
         messaging.subscribe(subscriber, to: RandomMessage);
         messaging.subscribe(subscriber, to: MockMessage);
