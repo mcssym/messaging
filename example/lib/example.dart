@@ -25,7 +25,7 @@ void main(List<String> args) async {
 class UserCreateMessage extends Message {
   final User user;
 
-  UserCreateMessage(this.user);
+  const UserCreateMessage(this.user);
 }
 
 class UserSubscriber implements MessagingSubscriber {

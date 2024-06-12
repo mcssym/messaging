@@ -5,7 +5,7 @@ import 'todo.dart';
 class CreateTodoMessage extends Message {
   final Todo todo;
 
-  CreateTodoMessage(this.todo)
+  const CreateTodoMessage(this.todo)
       : super(
           priority: 10,
         );

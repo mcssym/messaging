@@ -6,6 +6,7 @@ include: package:lint/analysis_options.yaml
 analyzer: 
   exclude:
     - example/**/*.dart
+    - test/**/*.mocks.dart
   errors: 
     public_member_api_docs: error
     missing_return: error
