@@ -462,14 +462,16 @@ class _Messaging implements Messaging, MessagingQueueDispatcher {
     if (!_subscribers.containsKey(to)) {
       return;
     }
-    _subscribers[to]!.remove(subscriber);
+    _subscribers[to]!.removeWhere(
+      (element) => element.equals(subscriber),
+    );
     _log.info('${subscriber.subscriberKey} unsubscribes to $to');
   }
 
   @override
   void unsubscribeAll(MessagingSubscriber subscriber) {
     _subscribers.forEach((key, value) {
-      if (value.contains(subscriber)) {
+      if (value.any((element) => element.equals(subscriber))) {
         unsubscribe(subscriber, to: key);
       }
     });
