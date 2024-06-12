@@ -11,3 +11,10 @@ abstract class MessagingSubscriber {
   /// Key of this subscriber used to identify it uniquely.
   String get subscriberKey;
 }
+
+/// Extension to compare two [MessagingSubscriber] instances.
+extension EqualsMessagingSubscriber on MessagingSubscriber {
+  /// Check if this subscriber is equal to [other].
+  bool equals(MessagingSubscriber other) =>
+      subscriberKey == other.subscriberKey && runtimeType == other.runtimeType;
+}
