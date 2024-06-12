@@ -475,7 +475,7 @@ class _Messaging implements Messaging, MessagingQueueDispatcher {
         unsubscribe(subscriber, to: key);
       }
     });
-    _log.info('unsubscribe $subscriber to all');
+    _log.info('unsubscribe ${subscriber.subscriberKey} to all');
   }
 
   void _addKeyToMessagingQueue(String key, int priority) {
@@ -534,7 +534,8 @@ class _Messaging implements Messaging, MessagingQueueDispatcher {
                 try {
                   await _dispatchTo(subscriber, message);
                   dispatched.add(subscriber.subscriberKey);
-                  _log.info('$message dispatched to $subscriber');
+                  _log.info(
+                      '$message dispatched to ${subscriber.subscriberKey}');
                   _updateStateOfMessage(
                     key,
                     MessageStateUpdatableData(
