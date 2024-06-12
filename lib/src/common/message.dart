@@ -1,4 +1,7 @@
+import 'package:meta/meta.dart';
+
 /// The base class extended by every kind of message
+@immutable
 abstract class Message {
   /// Maximum priority allowed
   static const int maxPriority = 999999999;

@@ -98,7 +98,7 @@ void main() {
         {
           MockUniqueMessage: <Type>[
             MockDependencyMessage,
-            MockSecondDependencyMessage
+            MockSecondDependencyMessage,
           ],
         },
         force: true,
