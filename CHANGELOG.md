@@ -1,6 +1,7 @@
-## 0.3.0
+## 0.3.1
 
 - Remove `logger` dependency.
+- Update dart constraint to `<=4.0.0`.
 
 ## 0.3.0
 
