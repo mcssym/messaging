@@ -1,5 +1,9 @@
 ## 0.3.0
 
+- Remove `logger` dependency.
+
+## 0.3.0
+
 - Fix un subscription by comparing subscriber key
 
 ## 0.2.0

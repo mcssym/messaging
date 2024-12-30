@@ -1,8 +1,8 @@
-import 'package:logger/logger.dart';
+import 'dart:developer' as dev;
 
 /// Log utility
 class Log implements ILogger {
-  final Logger _logger;
+  final _Logger _logger;
 
   /// Log is enable
   bool _enable;
@@ -12,17 +12,8 @@ class Log implements ILogger {
     required bool enable,
     required LogLevel level,
   })  : _enable = enable,
-        _logger = Logger(
-          level: _logLevelToLevel(level),
-          output: _ConsoleOutput(),
-          printer: PrefixPrinter(
-            PrettyPrinter(
-              printEmojis: false,
-              errorMethodCount: 10,
-              lineLength: 80,
-              methodCount: 20,
-            ),
-          ),
+        _logger = _Logger(
+          logLevel: level,
         );
 
   /// Enable log
@@ -44,7 +35,7 @@ class Log implements ILogger {
     StackTrace? stackTrace,
   }) {
     if (!_enable) return;
-    _logger.d(message, error, stackTrace);
+    _logger.debug(message, error: error, stackTrace: stackTrace);
   }
 
   @override
@@ -54,26 +45,22 @@ class Log implements ILogger {
     StackTrace? stackTrace,
   }) {
     if (!_enable) return;
-    _logger.e(message, error, stackTrace);
+    _logger.error(message, error: error, stackTrace: stackTrace);
   }
 
   @override
   void info(dynamic message) {
     if (!_enable) return;
-    _logger.i(
+    _logger.info(
       message,
-      null,
-      StackTrace.empty,
     );
   }
 
   @override
   void verbose(dynamic message) {
     if (!_enable) return;
-    _logger.v(
+    _logger.verbose(
       message,
-      null,
-      StackTrace.empty,
     );
   }
 
@@ -84,7 +71,7 @@ class Log implements ILogger {
     StackTrace? stackTrace,
   }) {
     if (!_enable) return;
-    _logger.w(message, error, stackTrace);
+    _logger.warning(message, error: error, stackTrace: stackTrace);
   }
 }
 
@@ -127,13 +114,103 @@ abstract class ToggableLog {
   void disable();
 }
 
-class _ConsoleOutput extends LogOutput {
-  @override
-  void output(OutputEvent event) {
-    for (final line in event.lines) {
+class _Logger {
+  /// The current log level. Messages at or above this level will be logged.
+  final LogLevel logLevel;
+
+  /// Constructor for the logger, taking in a [logLevel].
+  _Logger({this.logLevel = LogLevel.debug});
+
+  /// Logs the message at the provided [level].
+  /// Only logs if [level] is >= the configured [logLevel].
+  void log(
+    dynamic message, {
+    required LogLevel level,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    if (_shouldLog(level)) {
+      // You can customize the formatting of the log output here.
       // ignore: avoid_print
-      print("[Messaging]: $line");
+      print('[Messaging][${level.name.toUpperCase()}] $message');
+      if (error != null) {
+        // ignore: avoid_print
+        print(error);
+      }
+      if (stackTrace != null) {
+        dev.log(stackTrace.toString());
+      }
     }
+  }
+
+  /// Logs a debug message.
+  void debug(
+    dynamic message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        message,
+        level: LogLevel.debug,
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+  /// Logs an info message.
+  void info(
+    dynamic message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        message,
+        level: LogLevel.info,
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+  /// Logs a warning message.
+  void warning(
+    dynamic message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        message,
+        level: LogLevel.warning,
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+  /// Logs an error message.
+  void error(
+    dynamic message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        message,
+        level: LogLevel.error,
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+  /// Logs a verbose message.
+  void verbose(
+    dynamic message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        message,
+        level: LogLevel.verbose,
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+  /// A helper function to decide whether to print a message or not.
+  bool _shouldLog(LogLevel level) {
+    return level.index >= logLevel.index;
   }
 }
 
@@ -153,19 +230,4 @@ enum LogLevel {
 
   /// Will show only error log
   error,
-}
-
-Level _logLevelToLevel(LogLevel logLevel) {
-  switch (logLevel) {
-    case LogLevel.debug:
-      return Level.debug;
-    case LogLevel.info:
-      return Level.info;
-    case LogLevel.warning:
-      return Level.warning;
-    case LogLevel.error:
-      return Level.error;
-    default:
-      return Level.verbose;
-  }
 }
